@@ -1,0 +1,22 @@
+{
+  "name": "macropay",
+  "version": "1.0.0",
+  "description": "prueba tecnica Macropay",
+  "main": "app.js",
+  "scripts": {
+    "start": "node src/app.js",
+    "dev": "node --watch src/app.js",
+    "test": "mocha"
+  },
+  "author": "Jesus Medina Calderon",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2"
+  },
+  "devDependencies": {
+    "mocha": "^10.4.0",
+    "supertest": "^7.0.0"
+  }
+}
