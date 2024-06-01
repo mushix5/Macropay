@@ -13,7 +13,7 @@ exports.deleteUser = async(req, res) => {
         if(!email.test(params.email)) {
             response_json.message = HTTP._400.message;
             res.status(HTTP._400.status).send(response_json);
-            return;
+            return res;
         }
         const deleted = await deleteUser(params.email);
         if(deleted){
@@ -24,11 +24,11 @@ exports.deleteUser = async(req, res) => {
             response_json.message = HTTP._404.message;
             res.status(HTTP._404.status).send(response_json);
         }
-        return;
+        return res;
     } catch (error) {
         console.error(error);
         response_json.message = HTTP._500.message;
         res.status(HTTP._500.status).send(response_json);
-        return;
+        return res;
     }
 }
