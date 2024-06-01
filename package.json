@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node src/app.js",
     "dev": "node --watch src/app.js",
-    "test": "vitest"
+    "test": "jest"
   },
   "author": "Jesus Medina Calderon",
   "license": "ISC",
@@ -16,6 +16,6 @@
     "express": "^4.19.2"
   },
   "devDependencies": {
-    "vitest": "^1.6.0"
+    "jest": "^29.7.0"
   }
 }

@@ -17,7 +17,7 @@ exports.user = async(req, res) => {
         res.status(HTTP._400.status).send(response_json);
         return res;
     }
-        let userResponse = body.emailId ? await updateUser(body) : await addUser(body);
+        let userResponse = await userWrite(body);
         if(!userResponse.done) {
             response_json.message = userResponse.message ?? HTTP._404.message;
             res.status(HTTP._404.status).send(response_json);
@@ -54,4 +54,8 @@ function validiteBody(user) {
         return error;
     }
     return false;
+}
+
+async function userWrite(body) {
+    return body.emailId ? await updateUser(body) : await addUser(body);
 }

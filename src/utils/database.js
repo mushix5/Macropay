@@ -14,7 +14,7 @@ async function getFileJSON() {
 
 async function updateFileJSON(newJSON) {
   try {
-    fs.writeFileSync("src/config/database.json", JSON.stringify(newJSON));
+    await fs.writeFileSync("src/config/database.json", JSON.stringify(newJSON));
   } catch (error) {
     console.error(error);
   }
@@ -27,7 +27,6 @@ async function addUser(user) {
   };
   try {
     let data = await getFileJSON();
-    console.log(data);
     let databaseUser = data.users.find(
       userExist =>
         userExist.email === user.email ||
@@ -56,6 +55,7 @@ async function updateUser(user) {
   };
   try {
     let data = await getFileJSON();
+
     const index = data.users.findIndex(
       userExist => userExist.email === user.emailId
     );
@@ -77,7 +77,7 @@ async function updateUser(user) {
       user.emailId === user.email
         ? null
         : data.users.find(userExist => userExist.email === user.email);
-
+      
     if (databaseUser) {
       response.message =
         "El nuevo Correo electronico ya se encuentra registrado para otro usuario.";
@@ -90,7 +90,6 @@ async function updateUser(user) {
         userExist.lastName === user.lastName &&
         userExist.email !== user.emailId
     );
-
     if (userNameBussy) {
       response.message =
         "El nombre del usuario ya ha sido registrado con otro correo electronico";

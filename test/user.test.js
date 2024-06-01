@@ -1,98 +1,121 @@
-const { user } = require("../src/controller/user");
-const { getUser } = require("../src/controller/readUser.js");
-import { writeFileSync } from "fs";
-import { getFileJSON, updateFileJSON } from "../src/utils/database.js";
-import { expect } from "vitest";
-import { email } from "../src/utils/regularExpressions.js";
-const database = require("../src/utils/database.js");
-vi.mock('../src/utils/database.js');
+const { user } = require('../src/controller/user');
+const fs = require('fs');
+const { HTTP } = require('../src/config/http_codes');
 
 function mockUser(
-  wrongPass = false,
-  withoutEmail = false,
-  update = false,
-  emailExist = false,
-  nameExist = false
-) {
-  const inputCreate = {
-    name: "Nombre",
-    lastName: "Apellido",
-    password: "Test123?",
-  };
-  if (wrongPass) {
-    inputCreate.password = "12345";
-  }
-  if (!withoutEmail) {
-    inputCreate.email = "correo@correo.com";
-  }
-  if (update) {
-    inputCreate.emailId = "correo@correo.com";
-  }
-  if (emailExist) {
-    inputCreate.emailId = "correo1@correo.com";
-  }
-  if (nameExist) {
-    inputCreate.name = "USR";
-    inputCreate.lastName = "Number";
-  }
-  return {
-    body: inputCreate,
-  };
-}
-
-const fsRead = {
-  users: [
-    {
-      name: "USR",
-      lastName: "Number",
-      email: "correo1@correo.com",
+    wrongPass = false,
+    withoutEmail = false,
+    update = false,
+    emailExist = false,
+    nameExist = false,
+    invalidEmail = false,
+    invalidEmailId = false
+  ) {
+    const inputCreate = {
+      name: "Nombre",
+      lastName: "Apellido",
       password: "Test123?",
-    },
-  ],
-};
+    };
+    if (wrongPass) {
+      inputCreate.password = "12345";
+    }
+    if (!withoutEmail) {
+      inputCreate.email = "correo@correo.com";
+    }
+    if (update) {
+      inputCreate.emailId = "correo1@correo.com";
+    }
+    if (update && !emailExist) {
+      inputCreate.emailId = "correo@correo.com";
+    }
+    if (!update && emailExist) {
+        inputCreate.email = "correo1@correo.com";
+      }
+    if (nameExist) {
+      inputCreate.name = "USRO";
+      inputCreate.lastName = "Number";
+    }
+    if(invalidEmail) {
+        inputCreate.email = "correo@correo";
+    }
+    if(invalidEmailId) {
+        inputCreate.emailId = "correo@correo";
+    }
+    return {
+      body: inputCreate,
+    };
+  }  
 
-// vi.mock("../src/utils/database.js", () => ({
-//   getFileJSON: vi.fn(),//.mockImplementation(() => fsRead),
-// //   updateFileJSON: vi.fn().mockImplementation(() => {
-// //     console.log("texto");
-// //     return true;
-// //   })
-// updateFileJSON: vi.fn()
-// }));
+describe('users create/update', () => {
 
-describe("Test user create/update", async () => {
-//   afterEach(() => {
-//     vi.restoreAllMocks();
-//   });
+    const mockResponse = {
+        status: jest.fn().mockImplementation(function(statusCode) {
+          this.statusCode = statusCode;
+          return this;
+        }),
+        send: jest.fn().mockImplementation(function(data) {
+          this.data = data;
+        }),
+      };
 
-  const mockResponse = {
-    status: vi.fn().mockImplementation(function(statusCode) {
-      this.statusCode = statusCode;
-      return this;
-    }),
-    send: vi.fn().mockImplementation(function(data) {
-      this.data = data;
-    }),
-  };
-  // const getFileJSON = vi.fn();
-  // getFileJSON.mockReturnValue(fsRead);
-
-//   it("Add User Success", async () => {
-//     const spy = vi.spyOn(database, 'getFileJSON');
-//     spy.mockReturnValue(fsRead);
-//     // getFileJSON.mockImplementation(() => fsRead);
-//     // updateFileJSON.mockImplementation(() => {
-//     //         console.log("texto");
-//     //         return true;
-//     //       });
-//     // database.getFileJSON() = vi.fn().mockReturnValue(fsRead);
-//     const responseSuccess = await user(mockUser(), getUser);
-//     // database.getFileJSON = vi.fn().mockReturnValue(fsRead);
-//     expect(database.getFileJSON())
-//     expect(200).toBe(200);
-//   });
-  it("Get Users Success", async () => {
-    const response = await getUser({params: {}}, mockResponse);
-    expect(response.statusCode).toBe(200);
-  });
-});
+      const writeFileSyncMock = jest.spyOn(fs, 'writeFileSync');
+        writeFileSyncMock.mockReturnValue({})
+        const readFileSyncMock = jest.spyOn(fs, 'readFileSync');
+        readFileSyncMock.mockReturnValue(JSON.stringify({
+            users: [
+              {
+                name: "USR",
+                lastName: "Number",
+                email: "correo1@correo.com",
+                password: "Test123?",
+              },
+              {
+                name: "USRO",
+                lastName: "Number",
+                email: "correo2@correo.com",
+                password: "Test123?",
+              },
+            ],
+          }))
+    
+    it('test create user', async () => {
+        await user(mockUser(), mockResponse);
+        expect(mockResponse.statusCode).toBe(HTTP._201.status);
+    });
+    it('test invalid email', async () => {
+        await user(mockUser(false, false, false, false, false, true), mockResponse);
+        expect(mockResponse.statusCode).toBe(HTTP._400.status);
+    });
+    it('test wrong password', async () => {
+        await user(mockUser(true), mockResponse);
+        expect(mockResponse.statusCode).toBe(HTTP._400.status);
+    });
+    it('test create user alredy exist', async () => {
+        await user(mockUser(false, false, false, true, false), mockResponse);
+        expect(mockResponse.statusCode).toBe(HTTP._404.status);
+    });
+    it('test invalid request', async () => {
+        await user(mockUser(false, true), mockResponse);
+        expect(mockResponse.statusCode).toBe(HTTP._400.status);
+    });
+    it('test update success', async () => {
+        await user(mockUser(false, false, true, true), mockResponse);
+        expect(mockResponse.statusCode).toBe(HTTP._201.status);
+    });
+    it('test invalid email Id', async () => {
+        await user(mockUser(false, false, true, true, false, true), mockResponse);
+        expect(mockResponse.statusCode).toBe(HTTP._400.status);
+    });
+    it('test update error', async () => {
+        await user(mockUser(false, false, true), mockResponse);
+        expect(mockResponse.statusCode).toBe(HTTP._404.status);
+    });
+    it('test name exist', async () => {
+        await user(mockUser(false, false, true, true, true), mockResponse);
+        expect(mockResponse.statusCode).toBe(HTTP._404.status);
+    });
+    it('test unexpected', async () => {
+        await user({}, mockResponse);
+        expect(mockResponse.statusCode).toBe(HTTP._500.status);
+    });
+})
